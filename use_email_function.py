@@ -65,7 +65,7 @@ class Email:
         finally:
             server.quit()  # Закрытие соединения
 
-
+# пример использования, при последующей работе нужно убрать
 objectClass = Email(
     priority="CRIT",
     description="Миша упал",
