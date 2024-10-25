@@ -7,28 +7,53 @@ PASSWORD = "nwyc fhwc wsvi krnm"  # константа, пароль емаил�
 
 
 class Email:
-    def __init__(self, priority, description, message, status, type, author, receiver_email):
-        self.priority = priority
-        self.description = description
-        self.message = message
-        self.status = status
-        self.type = type
-        self.author = author
-        self.receiver_email = receiver_email
+    def __init__(self, priority, receiver_email, description=None, message=None, status=None, type=None, author=None,
+                 time="data_from_DB"):
+        self.priority = priority  # приоритет
+        self.description = description  # название
+        self.message = message  # описание
+        self.status = status  # статус
+        self.type = type  # тип
+        self.author = author  # автор
+        self.receiver_email = receiver_email  # кому отправляем
+        self.time = time  # время
 
     def send_new_email(self):
-        subject = "ПРОБЛЕМА"  # заголовок письма
-        body = f"Здравствуйте! Произошла проблема {self.description}, с приоритетом {self.priority}, где сотрудник {self.author}, сообщил о {self.message}. На данном этапе статус проблемы {self.status}, тип проблемы связан с {self.type}"  # что будет в письме
+        subject = self.description if self.description else "ПРОБЛЕМА"  # заголовок письма
+
+        # HTML-содержимое письма
+        body = f"""
+        <html>
+            <body style="font-family: Arial, sans-serif; color: #333;">
+                <h1 style="color: #E03C31;">{subject}</h1>
+                <p>Здравствуйте! В <strong>{self.time}</strong> произошла проблема.</p>
+        """
+        if self.priority:
+            body += f"<p><strong>Приоритет:</strong> {self.priority}</p>"
+        if self.author:
+            body += f"<p><strong>Сообщение от:</strong> {self.author}</p>"
+        if self.message:
+            body += f"<p><strong>Подробности:</strong> {self.message}</p>"
+        if self.status:
+            body += f"<p><strong>Статус проблемы:</strong> {self.status}</p>"
+        if self.type:
+            body += f"<p><strong>Тип проблемы:</strong> {self.type}</p>"
+
+        body += """
+                <p style="color: #999;">С уважением,<br>Команда СИБУР</p>
+            </body>
+        </html>
+        """
+
         msg = MIMEMultipart()  # объект, позволяющий добавлять различные части к сообщению (например, текст, вложения)
         msg['From'] = SENDER_EMAIL  # устанавливаем кто отправитель
         msg['To'] = self.receiver_email  # устанавливаем кому отправляем
         msg['Subject'] = subject  # устанавливаем заголовок письма
-        msg.attach(MIMEText(body,
-                            'plain'))  # присоединяет текстовое содержимое к сообщению, указывая, что это обычный текст (plain text)
+        msg.attach(MIMEText(body, 'html'))  # присоединяет HTML-содержимое к сообщению
 
         try:
             server = smtplib.SMTP('smtp.gmail.com', 587)  # Подключение к SMTP-серверу Gmail
-            server.starttls()  # Используем TLS (протокол подлючения для порта 587)
+            server.starttls()  # Используем TLS (протокол подключения для порта 587)
             server.login(SENDER_EMAIL, PASSWORD)  # Аутентификация
 
             server.sendmail(SENDER_EMAIL, self.receiver_email, msg.as_string())  # Отправка письма
@@ -41,10 +66,13 @@ class Email:
             server.quit()  # Закрытие соединения
 
 
-objectClass = Email(priority="CRIT",
-                    description="Миша упал с лестницы",
-                    message="Мишаня упал с лестницы на пятом этаже в плавильне, что-то сломал вроде",
-                    status="START", type="медики", author="Иванович Иван Иванов",
-                    receiver_email="9ipro1@gmail.com"
-                    )
+objectClass = Email(
+    priority="CRIT",
+    description="Миша упал",
+    message="Мишаня упал с лестницы на пятом этаже в плавильне, что-то сломал вроде",
+    status="START",
+    type="сварщик",
+    author="Иванович Иван Иванов",
+    receiver_email="9ipro1@gmail.com"
+)
 objectClass.send_new_email()  # отправить новое письмо
